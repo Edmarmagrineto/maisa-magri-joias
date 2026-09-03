@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { formatCPF, formatPhone, isValidCPF, isValidPhone } from '@/lib/validators';
 
 export default function CadastroPage() {
   return (
@@ -21,6 +22,8 @@ function CadastroForm() {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,13 +31,23 @@ function CadastroForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (!isValidPhone(phone)) {
+      setError('Digite um telefone válido, com DDD.');
+      return;
+    }
+    if (!isValidCPF(cpf)) {
+      setError('Digite um CPF válido.');
+      return;
+    }
+
+    setLoading(true);
 
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: { data: { full_name: name, phone, cpf } },
     });
 
     setLoading(false);
@@ -94,6 +107,30 @@ function CadastroForm() {
             className="w-full border border-ink/20 px-3 py-2 mt-1 text-sm bg-transparent outline-none focus:border-ink"
           />
         </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs uppercase tracking-widest2 text-ink/50">Telefone</label>
+            <input
+              required
+              inputMode="numeric"
+              placeholder="(11) 91234-5678"
+              value={phone}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
+              className="w-full border border-ink/20 px-3 py-2 mt-1 text-sm bg-transparent outline-none focus:border-ink"
+            />
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-widest2 text-ink/50">CPF</label>
+            <input
+              required
+              inputMode="numeric"
+              placeholder="000.000.000-00"
+              value={cpf}
+              onChange={(e) => setCpf(formatCPF(e.target.value))}
+              className="w-full border border-ink/20 px-3 py-2 mt-1 text-sm bg-transparent outline-none focus:border-ink"
+            />
+          </div>
+        </div>
         <div>
           <label className="text-xs uppercase tracking-widest2 text-ink/50">Senha</label>
           <input
@@ -107,6 +144,11 @@ function CadastroForm() {
         </div>
 
         {error && <p className="text-xs text-red-700">{error}</p>}
+
+        <p className="text-[11px] text-ink/40 leading-relaxed">
+          Seus dados são usados apenas para identificar seu pedido e emitir nota fiscal — nunca são
+          compartilhados com terceiros.
+        </p>
 
         <button
           disabled={loading}

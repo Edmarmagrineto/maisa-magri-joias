@@ -23,6 +23,9 @@ export type Review = {
 export type Profile = {
   id: string;
   full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  cpf: string | null;
   is_admin: boolean;
   created_at: string;
 };
