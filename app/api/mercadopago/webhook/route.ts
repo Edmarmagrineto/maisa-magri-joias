@@ -86,11 +86,17 @@ export async function POST(request: Request) {
         const customerName = customerProfile?.full_name || 'Cliente';
 
         const { data: admins } = await admin.from('profiles').select('email').eq('is_admin', true);
-        const adminEmails = (admins ?? []).map((a) => a.email).filter((e): e is string => Boolean(e));
+        const adminEmails = new Set(
+          (admins ?? []).map((a) => a.email).filter((e): e is string => Boolean(e))
+        );
+        // caixa dedicada pra receber avisos de pedido, mesmo sem ter login/admin no site
+        if (process.env.ORDER_NOTIFICATION_EMAIL) {
+          adminEmails.add(process.env.ORDER_NOTIFICATION_EMAIL);
+        }
 
-        if (adminEmails.length > 0) {
+        if (adminEmails.size > 0) {
           await sendEmail({
-            to: adminEmails,
+            to: Array.from(adminEmails),
             subject: `Novo pedido pago — ${customerName}`,
             html: adminNewOrderEmail(orderSummary, customerName),
           });
