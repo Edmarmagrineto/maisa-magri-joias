@@ -18,17 +18,17 @@ export default async function Header() {
     <header className="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-ink/10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center h-16 sm:h-20">
-          <div className="flex items-center">
+          <div className="flex items-center min-w-0">
             <MobileNav links={NAV_LINKS} />
           </div>
 
-          <Link href="/" className="justify-self-center">
-            <span className="font-serif font-normal uppercase text-xl sm:text-2xl tracking-widest2 text-ink whitespace-nowrap">
+          <Link href="/" className="justify-self-center min-w-0">
+            <span className="font-serif font-normal uppercase text-base sm:text-2xl tracking-wide sm:tracking-widest2 text-ink whitespace-nowrap">
               Maisa Magri
             </span>
           </Link>
 
-          <div className="flex items-center justify-end gap-4 text-xs uppercase tracking-widest2 whitespace-nowrap">
+          <div className="flex items-center justify-end min-w-0 gap-3 sm:gap-4 text-xs uppercase tracking-normal sm:tracking-widest2 whitespace-nowrap">
             {profile?.is_admin && (
               <Link href="/admin" className="hidden sm:inline hover:underline">
                 Admin
