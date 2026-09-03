@@ -24,7 +24,6 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState(PAYMENT_OPTIONS[0]);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
-  const [orderId, setOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -47,59 +46,32 @@ export default function CheckoutPage() {
     setPlacing(true);
     setError('');
 
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        payment_method: payment,
-        shipping_cep: quote.cep,
-        shipping_cost: quote.price,
-        total: total + quote.price,
-        status: 'pendente',
-      })
-      .select()
-      .single();
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+          paymentMethod: payment,
+          shippingCep: quote.cep,
+          shippingCost: quote.price,
+        }),
+      });
 
-    if (orderError || !order) {
-      setError('Não foi possível criar o pedido. Tente novamente.');
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        setError(data.error || 'Não foi possível iniciar o pagamento. Tente novamente.');
+        setPlacing(false);
+        return;
+      }
+
+      clear();
+      window.location.href = data.url;
+    } catch {
+      setError('Não foi possível iniciar o pagamento. Tente novamente.');
       setPlacing(false);
-      return;
     }
-
-    const { error: itemsError } = await supabase.from('order_items').insert(
-      items.map((item) => ({
-        order_id: order.id,
-        product_id: item.productId,
-        product_name: item.name,
-        unit_price: item.price,
-        quantity: item.quantity,
-      }))
-    );
-
-    setPlacing(false);
-
-    if (itemsError) {
-      setError('Pedido criado, mas houve um erro ao salvar os itens.');
-      return;
-    }
-
-    setOrderId(order.id);
-    clear();
-  }
-
-  if (orderId) {
-    return (
-      <div className="mx-auto max-w-xl px-4 sm:px-6 py-24 text-center">
-        <h1 className="font-serif text-3xl mb-4">Pedido recebido!</h1>
-        <p className="text-ink/60 mb-2">
-          Pagamento via <strong>{payment}</strong>. Acompanhe o status na sua área de cliente.
-        </p>
-        <p className="text-xs text-ink/40 mb-8">Pedido #{orderId.slice(0, 8)}</p>
-        <Link href="/conta" className="inline-block bg-ink text-cream px-8 py-3 text-xs uppercase tracking-widest2">
-          Ver meus pedidos
-        </Link>
-      </div>
-    );
   }
 
   if (items.length === 0) {
@@ -213,8 +185,11 @@ export default function CheckoutPage() {
             disabled={placing}
             className="mt-6 w-full bg-ink text-cream py-3 text-xs uppercase tracking-widest2 hover:bg-ink/90 transition-colors disabled:opacity-50"
           >
-            {placing ? 'Confirmando...' : 'Confirmar pedido'}
+            {placing ? 'Redirecionando...' : 'Ir para pagamento'}
           </button>
+          <p className="text-[11px] text-ink/40 mt-3 text-center">
+            Você vai ser redirecionada para o ambiente seguro do Mercado Pago para concluir o pagamento.
+          </p>
         </div>
       </div>
     </div>
