@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getPayment, mapPaymentStatus, mapPaymentMethodLabel } from '@/lib/mercadopago';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendEmail } from '@/lib/resend';
+import { adminNewOrderEmail, customerOrderConfirmationEmail } from '@/lib/email-templates';
 
 export async function POST(request: Request) {
   const url = new URL(request.url);
@@ -44,12 +46,12 @@ export async function POST(request: Request) {
 
     await admin.from('orders').update(update).eq('id', orderId);
 
-    // só baixa o estoque na primeira confirmação de pagamento — evita descontar duas vezes
+    // só baixa o estoque e manda e-mail na primeira confirmação de pagamento — evita repetir
     // quando o Mercado Pago reenvia a mesma notificação (comportamento normal do webhook deles)
     if (status === 'pago' && existing?.status !== 'pago') {
       const { data: items } = await admin
         .from('order_items')
-        .select('product_id, quantity')
+        .select('product_id, product_name, unit_price, quantity')
         .eq('order_id', orderId);
 
       for (const item of items ?? []) {
@@ -58,6 +60,49 @@ export async function POST(request: Request) {
           p_product_id: item.product_id,
           p_quantity: item.quantity,
         });
+      }
+
+      const { data: fullOrder } = await admin
+        .from('orders')
+        .select('id, total, payment_method, shipping_cep, user_id')
+        .eq('id', orderId)
+        .single();
+
+      if (fullOrder && items) {
+        const orderSummary = {
+          id: fullOrder.id,
+          total: fullOrder.total,
+          payment_method: fullOrder.payment_method,
+          shipping_cep: fullOrder.shipping_cep,
+          items,
+        };
+
+        const { data: customerProfile } = await admin
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', fullOrder.user_id)
+          .single();
+
+        const customerName = customerProfile?.full_name || 'Cliente';
+
+        const { data: admins } = await admin.from('profiles').select('email').eq('is_admin', true);
+        const adminEmails = (admins ?? []).map((a) => a.email).filter((e): e is string => Boolean(e));
+
+        if (adminEmails.length > 0) {
+          await sendEmail({
+            to: adminEmails,
+            subject: `Novo pedido pago — ${customerName}`,
+            html: adminNewOrderEmail(orderSummary, customerName),
+          });
+        }
+
+        if (customerProfile?.email) {
+          await sendEmail({
+            to: customerProfile.email,
+            subject: 'Recebemos seu pagamento — Maisa Magri',
+            html: customerOrderConfirmationEmail(orderSummary, customerName),
+          });
+        }
       }
     }
 
