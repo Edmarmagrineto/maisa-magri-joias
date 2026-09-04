@@ -11,7 +11,7 @@ export default function Hero() {
         priority
         quality={92}
         className="object-cover opacity-80"
-        style={{ objectPosition: 'center 40%' }}
+        style={{ objectPosition: 'center 30%' }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
       <div className="relative z-10 flex h-full flex-col items-center justify-end pb-20 px-6 text-center text-cream">
