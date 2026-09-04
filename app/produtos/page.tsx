@@ -10,13 +10,15 @@ const CATEGORIES = ['Todas', 'Brincos', 'Colares', 'Pulseiras', 'Anéis'];
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: { categoria?: string };
+  searchParams: { categoria?: string; q?: string };
 }) {
   const categoria = searchParams.categoria ?? 'Todas';
+  const q = searchParams.q?.trim() ?? '';
   const supabase = createClient();
 
   let query = supabase.from('products').select('*').eq('is_active', true);
   if (categoria !== 'Todas') query = query.eq('category', categoria);
+  if (q) query = query.ilike('name', `%${q}%`);
 
   const { data: products } = await query.order('created_at', { ascending: false });
 
@@ -25,6 +27,11 @@ export default async function ProdutosPage({
       <div className="text-center mb-10">
         <p className="text-xs uppercase tracking-widest2 text-ink/50">Catálogo completo</p>
         <h1 className="font-serif text-4xl mt-2">Todas as peças</h1>
+        {q && (
+          <p className="text-sm text-ink/60 mt-3">
+            Resultados para &quot;{q}&quot;
+          </p>
+        )}
       </div>
 
       <div className="flex flex-wrap justify-center gap-2 mb-12">

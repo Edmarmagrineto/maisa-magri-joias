@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getCurrentProfile } from '@/lib/auth';
 import CartIndicator from '@/components/CartIndicator';
 import MobileNav from '@/components/MobileNav';
+import ProductSearch from '@/components/ProductSearch';
 
 const NAV_LINKS = [
   { href: '/produtos', label: 'Catálogo' },
@@ -51,6 +52,10 @@ export default async function Header() {
             </Link>
           ))}
         </nav>
+
+        <div className="flex justify-center py-2 border-t border-ink/10 md:border-t-0">
+          <ProductSearch />
+        </div>
       </div>
     </header>
   );

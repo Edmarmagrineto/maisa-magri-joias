@@ -1,16 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { formatPrice } from '@/lib/format';
+import OrderStatusSelect from '@/components/OrderStatusSelect';
 import type { Order, OrderItem, Profile } from '@/lib/types';
 
 export const revalidate = 0;
-
-const STATUS_LABEL: Record<string, string> = {
-  pendente: 'Pendente',
-  pago: 'Pago',
-  enviado: 'Enviado',
-  entregue: 'Entregue',
-  cancelado: 'Cancelado',
-};
 
 type OrderWithItems = Order & { order_items: OrderItem[] };
 
@@ -56,7 +49,7 @@ export default async function AdminPedidosPage() {
                     minute: '2-digit',
                   })}
                 </span>
-                <span className="font-medium">{STATUS_LABEL[order.status] ?? order.status}</span>
+                <OrderStatusSelect orderId={order.id} status={order.status} />
               </div>
 
               <p className="text-sm text-ink/70 mb-2">
