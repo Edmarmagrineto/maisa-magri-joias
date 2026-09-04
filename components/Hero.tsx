@@ -5,10 +5,11 @@ export default function Hero() {
   return (
     <section className="relative h-[80vh] min-h-[520px] w-full overflow-hidden bg-ink">
       <Image
-        src="/products/peca-1.jpeg"
+        src="/products/peca-6.jpeg"
         alt="Semijoias Maisa Magri"
         fill
         priority
+        quality={90}
         className="object-cover opacity-80"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
