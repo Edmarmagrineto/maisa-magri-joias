@@ -5,13 +5,12 @@ export default function Hero() {
   return (
     <section className="relative h-[80vh] min-h-[520px] w-full overflow-hidden bg-ink">
       <Image
-        src="/products/hero-brinco.jpeg"
+        src="/products/peca-1.jpeg"
         alt="Semijoias Maisa Magri"
         fill
         priority
-        quality={92}
+        quality={95}
         className="object-cover opacity-80"
-        style={{ objectPosition: 'center 30%' }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
       <div className="relative z-10 flex h-full flex-col items-center justify-end pb-20 px-6 text-center text-cream">
