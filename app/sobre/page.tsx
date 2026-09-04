@@ -61,6 +61,30 @@ export default function SobrePage() {
               Começar a comprar
             </Link>
           </div>
+
+          <div className="text-center mt-14 pt-10 border-t border-ink/10">
+            <p className="text-xs uppercase tracking-widest2 text-ink/50 mb-4">
+              Ainda com dúvidas? Fale com a gente
+            </p>
+            <div className="flex justify-center gap-6 text-sm">
+              <a
+                href="https://wa.me/5517997451727"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                WhatsApp: (17) 99745-1727
+              </a>
+              <a
+                href="https://instagram.com/maisamagri"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                Instagram: @maisamagri
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
