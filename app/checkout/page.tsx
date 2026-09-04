@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useCart } from '@/components/CartProvider';
-import { calculateShipping, PICKUP_QUOTE, type ShippingQuote } from '@/lib/shipping';
 import { formatPrice } from '@/lib/format';
 import PaymentMethods from '@/components/PaymentMethods';
+import type { RealShippingQuote } from '@/lib/melhorenvio';
 
 const PAYMENT_OPTIONS = ['Pix', 'Cartão de crédito', 'Cartão de débito', 'Boleto bancário'];
 
@@ -21,10 +21,15 @@ export default function CheckoutPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [deliveryMethod, setDeliveryMethod] = useState<'entrega' | 'retirada'>('entrega');
   const [cep, setCep] = useState('');
-  const [quote, setQuote] = useState<ShippingQuote | null>(null);
+  const [quotes, setQuotes] = useState<RealShippingQuote[]>([]);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+  const [loadingQuote, setLoadingQuote] = useState(false);
+  const [quoteError, setQuoteError] = useState('');
   const [payment, setPayment] = useState(PAYMENT_OPTIONS[0]);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
+
+  const selectedQuote = quotes.find((q) => q.id === selectedQuoteId) ?? null;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -33,23 +38,58 @@ export default function CheckoutPage() {
     });
   }, [supabase]);
 
-  function handleCalcShipping(e: React.FormEvent) {
+  async function handleCalcShipping(e: React.FormEvent) {
     e.preventDefault();
-    setQuote(calculateShipping(cep));
+    setQuoteError('');
+    setQuotes([]);
+    setSelectedQuoteId(null);
+    setLoadingQuote(true);
+
+    try {
+      const res = await fetch('/api/shipping/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cep,
+          items: items.map((item) => ({ quantity: item.quantity })),
+          subtotal: total,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.quotes) {
+        setQuoteError(data.error || 'Não foi possível calcular o frete.');
+        return;
+      }
+
+      setQuotes(data.quotes);
+      setSelectedQuoteId(data.quotes[0]?.id ?? null);
+    } catch {
+      setQuoteError('Não foi possível calcular o frete. Tente novamente.');
+    } finally {
+      setLoadingQuote(false);
+    }
   }
 
   function handleSelectDeliveryMethod(method: 'entrega' | 'retirada') {
     setDeliveryMethod(method);
     setError('');
-    setQuote(method === 'retirada' ? PICKUP_QUOTE : null);
+    setQuoteError('');
+    setQuotes([]);
+    setSelectedQuoteId(null);
   }
 
   async function handleConfirm() {
     if (!user) return;
-    if (!quote) {
-      setError('Calcule o frete antes de continuar.');
+
+    const shippingCep = cep.replace(/\D/g, '');
+
+    if (deliveryMethod === 'entrega' && !selectedQuote) {
+      setError('Calcule e escolha uma opção de frete antes de continuar.');
       return;
     }
+
     setPlacing(true);
     setError('');
 
@@ -61,8 +101,8 @@ export default function CheckoutPage() {
           items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
           paymentMethod: payment,
           deliveryMethod,
-          shippingCep: quote.cep,
-          shippingCost: quote.price,
+          shippingCep: deliveryMethod === 'retirada' ? 'RETIRADA' : shippingCep,
+          shippingServiceId: deliveryMethod === 'entrega' ? selectedQuote?.id : null,
         }),
       });
 
@@ -152,14 +192,40 @@ export default function CheckoutPage() {
                     placeholder="CEP (00000-000)"
                     className="flex-1 border border-ink/20 px-3 py-2 text-sm bg-transparent outline-none focus:border-ink"
                   />
-                  <button className="border border-ink px-4 py-2 text-xs uppercase tracking-widest2 hover:bg-ink hover:text-cream transition-colors">
-                    Calcular frete
+                  <button
+                    disabled={loadingQuote}
+                    className="border border-ink px-4 py-2 text-xs uppercase tracking-widest2 hover:bg-ink hover:text-cream transition-colors disabled:opacity-50"
+                  >
+                    {loadingQuote ? 'Calculando...' : 'Calcular frete'}
                   </button>
                 </form>
-                {quote && quote.cep !== 'RETIRADA' && (
-                  <p className="text-sm text-ink/70 mt-3">
-                    Entrega para {quote.region}: {formatPrice(quote.price)} ({quote.minDays} a {quote.maxDays} dias úteis)
-                  </p>
+                {quoteError && <p className="text-xs text-red-700 mt-2">{quoteError}</p>}
+                {quotes.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {quotes.map((q) => (
+                      <label
+                        key={q.id}
+                        className="flex items-center justify-between gap-3 text-sm cursor-pointer border border-ink/10 px-3 py-2 hover:border-ink/30"
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="shippingQuote"
+                            checked={selectedQuoteId === q.id}
+                            onChange={() => setSelectedQuoteId(q.id)}
+                          />
+                          <span>
+                            {q.service || 'Transportadora'}
+                            <span className="text-ink/50">
+                              {' '}
+                              · {q.minDays > 0 ? `${q.minDays} dias úteis` : 'prazo a confirmar'}
+                            </span>
+                          </span>
+                        </span>
+                        <strong>{formatPrice(q.price)}</strong>
+                      </label>
+                    ))}
+                  </div>
                 )}
               </>
             ) : (
@@ -209,12 +275,16 @@ export default function CheckoutPage() {
             <div className="flex justify-between">
               <span>Frete</span>
               <span>
-                {!quote ? '—' : quote.cep === 'RETIRADA' ? 'Grátis (retirada)' : formatPrice(quote.price)}
+                {deliveryMethod === 'retirada'
+                  ? 'Grátis (retirada)'
+                  : selectedQuote
+                    ? formatPrice(selectedQuote.price)
+                    : '—'}
               </span>
             </div>
             <div className="flex justify-between text-base pt-2">
               <strong>Total</strong>
-              <strong>{formatPrice(total + (quote?.price ?? 0))}</strong>
+              <strong>{formatPrice(total + (deliveryMethod === 'entrega' ? selectedQuote?.price ?? 0 : 0))}</strong>
             </div>
           </div>
 

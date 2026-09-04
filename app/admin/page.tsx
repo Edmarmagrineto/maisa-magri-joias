@@ -4,11 +4,16 @@ import { redirect } from 'next/navigation';
 import { getCurrentProfile } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { formatPrice } from '@/lib/format';
+import { isMelhorEnvioConnected } from '@/lib/melhorenvio';
 import type { Product } from '@/lib/types';
 
 export const revalidate = 0;
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: { melhorenvio?: string };
+}) {
   const { user, profile } = await getCurrentProfile();
   if (!user) redirect('/entrar?redirect=/admin');
   if (!profile?.is_admin) redirect('/conta');
@@ -19,8 +24,37 @@ export default async function AdminPage() {
     .select('*')
     .order('created_at', { ascending: false });
 
+  const shippingConnected = await isMelhorEnvioConnected();
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
+      {searchParams.melhorenvio === 'conectado' && (
+        <p className="mb-6 border border-ink/15 bg-sand/40 px-4 py-3 text-sm">
+          Frete real conectado com sucesso.
+        </p>
+      )}
+      {searchParams.melhorenvio === 'erro' && (
+        <p className="mb-6 border border-red-700/30 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Não foi possível conectar o cálculo de frete real. Tente novamente.
+        </p>
+      )}
+
+      <div className="mb-6 border border-ink/15 px-4 py-3 flex items-center justify-between text-sm">
+        <span>
+          Cálculo de frete real (Melhor Envio):{' '}
+          {shippingConnected ? (
+            <strong>conectado</strong>
+          ) : (
+            <strong className="text-red-700">não conectado</strong>
+          )}
+        </span>
+        {!shippingConnected && (
+          <a href="/api/melhorenvio/connect" className="underline hover:no-underline">
+            Conectar agora
+          </a>
+        )}
+      </div>
+
       <div className="flex items-center justify-between mb-10">
         <div>
           <p className="text-xs uppercase tracking-widest2 text-ink/50">Área administrativa</p>

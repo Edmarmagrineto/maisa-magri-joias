@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createPreference } from '@/lib/mercadopago';
+import { calculateRealShipping } from '@/lib/melhorenvio';
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -16,8 +17,9 @@ export async function POST(request: Request) {
   const body = await request.json();
   const items: { productId: string; quantity: number }[] = body.items ?? [];
   const paymentMethod: string = body.paymentMethod ?? 'A definir';
-  const shippingCep: string | null = body.shippingCep ?? null;
-  const shippingCost: number = Number(body.shippingCost) || 0;
+  const deliveryMethod: string = body.deliveryMethod ?? 'entrega';
+  const shippingCepDigits: string = String(body.shippingCep ?? '').replace(/\D/g, '');
+  const shippingServiceId: string | null = body.shippingServiceId ?? null;
 
   if (items.length === 0) {
     return NextResponse.json({ error: 'Carrinho vazio.' }, { status: 400 });
@@ -46,6 +48,40 @@ export async function POST(request: Request) {
   });
 
   const subtotal = orderItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
+
+  // frete tambem nunca confia no valor vindo do navegador — recalcula de verdade no
+  // Melhor Envio a partir do CEP e do servico escolhido pela cliente
+  let shippingCost = 0;
+  let finalShippingCep: string = 'RETIRADA';
+
+  if (deliveryMethod !== 'retirada') {
+    if (shippingCepDigits.length !== 8 || !shippingServiceId) {
+      return NextResponse.json({ error: 'Calcule e escolha uma opção de frete antes de continuar.' }, { status: 400 });
+    }
+
+    try {
+      const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
+      const quotes = await calculateRealShipping({ toCep: shippingCepDigits, itemCount, subtotal });
+      const chosen = quotes.find((q) => q.id === shippingServiceId);
+
+      if (!chosen) {
+        return NextResponse.json(
+          { error: 'A opção de frete escolhida não está mais disponível. Calcule novamente.' },
+          { status: 409 }
+        );
+      }
+
+      shippingCost = chosen.price;
+      finalShippingCep = shippingCepDigits;
+    } catch (err) {
+      console.error('Erro ao revalidar frete no checkout:', err);
+      return NextResponse.json(
+        { error: 'Não foi possível confirmar o frete agora. Tente novamente.' },
+        { status: 502 }
+      );
+    }
+  }
+
   const total = subtotal + shippingCost;
 
   const { data: order, error: orderError } = await supabase
@@ -53,7 +89,7 @@ export async function POST(request: Request) {
     .insert({
       user_id: user.id,
       payment_method: paymentMethod,
-      shipping_cep: shippingCep,
+      shipping_cep: finalShippingCep,
       shipping_cost: shippingCost,
       total,
       status: 'pendente',

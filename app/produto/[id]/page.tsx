@@ -48,7 +48,7 @@ export default async function ProdutoPage({ params }: { params: { id: string } }
           </div>
 
           <div className="mt-8">
-            <ShippingCalculator />
+            <ShippingCalculator price={p.price} />
           </div>
         </div>
       </div>
