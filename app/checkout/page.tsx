@@ -164,8 +164,8 @@ export default function CheckoutPage() {
               </>
             ) : (
               <p className="text-sm text-ink/70">
-                Sem custo de frete. Combinamos o local e o horário para você retirar o pedido assim que o
-                pagamento for confirmado.
+                Sem custo de frete. Retire seu pedido em Rua Antônio Sabino, 1077, Centro, assim que o pagamento
+                for confirmado.
               </p>
             )}
           </div>

@@ -53,7 +53,7 @@ export function customerOrderConfirmationEmail(order: OrderSummary, customerName
       <p style="font-size:13px; color:#666;">Pagamento: ${order.payment_method}</p>
       <p style="font-size:13px; color:#666;">${
         order.shipping_cep === 'RETIRADA'
-          ? 'Retirada pessoalmente — em breve entramos em contato para combinar local e horário.'
+          ? 'Retirada pessoalmente em Rua Antônio Sabino, 1077, Centro.'
           : `Entrega no CEP ${order.shipping_cep ?? '—'}`
       }</p>
       <p style="margin-top:20px; font-size:13px; color:#666;">
