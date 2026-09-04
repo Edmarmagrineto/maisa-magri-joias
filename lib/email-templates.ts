@@ -32,7 +32,11 @@ export function adminNewOrderEmail(order: OrderSummary, customerName: string) {
         ${itemsRows(order.items)}
       </table>
       <p style="margin-top:16px; font-size:18px;"><strong>Total: ${formatPrice(order.total)}</strong></p>
-      <p style="font-size:13px; color:#666;">CEP de entrega: ${order.shipping_cep ?? '—'}</p>
+      <p style="font-size:13px; color:#666;">${
+        order.shipping_cep === 'RETIRADA'
+          ? 'Cliente vai retirar o pedido pessoalmente'
+          : `CEP de entrega: ${order.shipping_cep ?? '—'}`
+      }</p>
     </div>
   `;
 }
@@ -47,6 +51,11 @@ export function customerOrderConfirmationEmail(order: OrderSummary, customerName
       </table>
       <p style="margin-top:16px; font-size:18px;"><strong>Total: ${formatPrice(order.total)}</strong></p>
       <p style="font-size:13px; color:#666;">Pagamento: ${order.payment_method}</p>
+      <p style="font-size:13px; color:#666;">${
+        order.shipping_cep === 'RETIRADA'
+          ? 'Retirada pessoalmente — em breve entramos em contato para combinar local e horário.'
+          : `Entrega no CEP ${order.shipping_cep ?? '—'}`
+      }</p>
       <p style="margin-top:20px; font-size:13px; color:#666;">
         Acompanhe o status do seu pedido a qualquer momento na sua conta do site Maisa Magri.
       </p>

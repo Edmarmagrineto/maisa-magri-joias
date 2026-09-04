@@ -6,6 +6,15 @@ export type ShippingQuote = {
   region: string;
 };
 
+// usado quando a cliente escolhe retirar o pedido pessoalmente em vez de receber por entrega
+export const PICKUP_QUOTE: ShippingQuote = {
+  cep: 'RETIRADA',
+  price: 0,
+  minDays: 0,
+  maxDays: 0,
+  region: 'Retirada na loja',
+};
+
 const REGIONS: { test: RegExp; name: string; base: number; days: [number, number] }[] = [
   { test: /^0[1-9]|^1[01]/, name: 'São Paulo (capital e região)', base: 14.9, days: [1, 3] },
   { test: /^[23]\d/, name: 'Sudeste / Sul', base: 19.9, days: [2, 5] },

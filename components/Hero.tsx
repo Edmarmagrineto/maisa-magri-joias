@@ -13,7 +13,8 @@ export default function Hero() {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
       <div className="relative z-10 flex h-full flex-col items-center justify-end pb-20 px-6 text-center text-cream">
-        <p className="text-xs uppercase tracking-widest2 mb-4">Semijoias autorais</p>
+        <p className="text-xs uppercase tracking-widest2 mb-1">Maisa Magri · Desde 2003</p>
+        <p className="text-xs uppercase tracking-widest2 mb-4">Semijoias / Prata 925</p>
         <h1 className="font-serif text-4xl sm:text-6xl max-w-2xl leading-tight">
           Brilho que acompanha cada momento
         </h1>

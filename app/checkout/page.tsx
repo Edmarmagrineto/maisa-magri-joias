@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useCart } from '@/components/CartProvider';
-import { calculateShipping, type ShippingQuote } from '@/lib/shipping';
+import { calculateShipping, PICKUP_QUOTE, type ShippingQuote } from '@/lib/shipping';
 import { formatPrice } from '@/lib/format';
 import PaymentMethods from '@/components/PaymentMethods';
 
@@ -19,6 +19,7 @@ export default function CheckoutPage() {
 
   const [user, setUser] = useState<User | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [deliveryMethod, setDeliveryMethod] = useState<'entrega' | 'retirada'>('entrega');
   const [cep, setCep] = useState('');
   const [quote, setQuote] = useState<ShippingQuote | null>(null);
   const [payment, setPayment] = useState(PAYMENT_OPTIONS[0]);
@@ -37,6 +38,12 @@ export default function CheckoutPage() {
     setQuote(calculateShipping(cep));
   }
 
+  function handleSelectDeliveryMethod(method: 'entrega' | 'retirada') {
+    setDeliveryMethod(method);
+    setError('');
+    setQuote(method === 'retirada' ? PICKUP_QUOTE : null);
+  }
+
   async function handleConfirm() {
     if (!user) return;
     if (!quote) {
@@ -53,6 +60,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
           paymentMethod: payment,
+          deliveryMethod,
           shippingCep: quote.cep,
           shippingCost: quote.price,
         }),
@@ -113,21 +121,51 @@ export default function CheckoutPage() {
       <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr]">
         <div className="space-y-10">
           <div>
-            <p className="text-xs uppercase tracking-widest2 text-ink/50 mb-3">Endereço de entrega</p>
-            <form onSubmit={handleCalcShipping} className="flex gap-2">
-              <input
-                value={cep}
-                onChange={(e) => setCep(e.target.value)}
-                placeholder="CEP (00000-000)"
-                className="flex-1 border border-ink/20 px-3 py-2 text-sm bg-transparent outline-none focus:border-ink"
-              />
-              <button className="border border-ink px-4 py-2 text-xs uppercase tracking-widest2 hover:bg-ink hover:text-cream transition-colors">
-                Calcular frete
+            <p className="text-xs uppercase tracking-widest2 text-ink/50 mb-3">Entrega ou retirada</p>
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => handleSelectDeliveryMethod('entrega')}
+                className={`flex-1 border px-4 py-2 text-xs uppercase tracking-widest2 transition-colors ${
+                  deliveryMethod === 'entrega' ? 'bg-ink text-cream border-ink' : 'border-ink/20 hover:border-ink'
+                }`}
+              >
+                Receber em casa
               </button>
-            </form>
-            {quote && (
-              <p className="text-sm text-ink/70 mt-3">
-                Entrega para {quote.region}: {formatPrice(quote.price)} ({quote.minDays} a {quote.maxDays} dias úteis)
+              <button
+                type="button"
+                onClick={() => handleSelectDeliveryMethod('retirada')}
+                className={`flex-1 border px-4 py-2 text-xs uppercase tracking-widest2 transition-colors ${
+                  deliveryMethod === 'retirada' ? 'bg-ink text-cream border-ink' : 'border-ink/20 hover:border-ink'
+                }`}
+              >
+                Retirar pessoalmente
+              </button>
+            </div>
+
+            {deliveryMethod === 'entrega' ? (
+              <>
+                <form onSubmit={handleCalcShipping} className="flex gap-2">
+                  <input
+                    value={cep}
+                    onChange={(e) => setCep(e.target.value)}
+                    placeholder="CEP (00000-000)"
+                    className="flex-1 border border-ink/20 px-3 py-2 text-sm bg-transparent outline-none focus:border-ink"
+                  />
+                  <button className="border border-ink px-4 py-2 text-xs uppercase tracking-widest2 hover:bg-ink hover:text-cream transition-colors">
+                    Calcular frete
+                  </button>
+                </form>
+                {quote && quote.cep !== 'RETIRADA' && (
+                  <p className="text-sm text-ink/70 mt-3">
+                    Entrega para {quote.region}: {formatPrice(quote.price)} ({quote.minDays} a {quote.maxDays} dias úteis)
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-ink/70">
+                Sem custo de frete. Combinamos o local e o horário para você retirar o pedido assim que o
+                pagamento for confirmado.
               </p>
             )}
           </div>
@@ -170,7 +208,9 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between">
               <span>Frete</span>
-              <span>{quote ? formatPrice(quote.price) : '—'}</span>
+              <span>
+                {!quote ? '—' : quote.cep === 'RETIRADA' ? 'Grátis (retirada)' : formatPrice(quote.price)}
+              </span>
             </div>
             <div className="flex justify-between text-base pt-2">
               <strong>Total</strong>
