@@ -146,8 +146,15 @@ function CadastroForm() {
         {error && <p className="text-xs text-red-700">{error}</p>}
 
         <p className="text-[11px] text-ink/40 leading-relaxed">
-          Seus dados são usados apenas para identificar seu pedido e emitir nota fiscal — nunca são
-          compartilhados com terceiros.
+          Ao criar sua conta, você concorda com nossos{' '}
+          <Link href="/termos-de-uso" className="underline hover:no-underline">
+            Termos de Uso
+          </Link>{' '}
+          e com nossa{' '}
+          <Link href="/politica-de-privacidade" className="underline hover:no-underline">
+            Política de Privacidade
+          </Link>
+          .
         </p>
 
         <button

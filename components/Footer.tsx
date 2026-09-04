@@ -56,8 +56,19 @@ export default function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t border-cream/10 py-5 text-center text-[11px] text-cream/50">
-        © {new Date().getFullYear()} Maisa Magri Semijoias — todos os direitos reservados.
+      <div className="border-t border-cream/10 py-5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-center text-[11px] text-cream/50">
+        <span>© {new Date().getFullYear()} Maisa Magri Semijoias — todos os direitos reservados.</span>
+        <span className="flex gap-4">
+          <Link href="/politica-de-privacidade" className="hover:underline hover:text-cream/80">
+            Política de Privacidade
+          </Link>
+          <Link href="/termos-de-uso" className="hover:underline hover:text-cream/80">
+            Termos de Uso
+          </Link>
+          <Link href="/trocas-e-devolucoes" className="hover:underline hover:text-cream/80">
+            Trocas e Devoluções
+          </Link>
+        </span>
       </div>
     </footer>
   );
