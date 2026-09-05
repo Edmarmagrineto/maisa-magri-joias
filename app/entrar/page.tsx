@@ -57,7 +57,12 @@ function EntrarForm() {
           />
         </div>
         <div>
-          <label className="text-xs uppercase tracking-widest2 text-ink/50">Senha</label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs uppercase tracking-widest2 text-ink/50">Senha</label>
+            <Link href="/esqueci-senha" className="text-xs text-ink/50 underline hover:no-underline">
+              Esqueceu a senha?
+            </Link>
+          </div>
           <input
             type="password"
             required
