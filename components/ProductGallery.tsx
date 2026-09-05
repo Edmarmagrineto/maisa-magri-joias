@@ -46,16 +46,21 @@ export default function ProductGallery({ images, alt }: { images: string[]; alt:
       </div>
 
       {images.length > 1 && (
-        <div className="flex justify-center gap-2 mt-3">
+        <div className="flex justify-center gap-1 mt-3">
           {images.map((_, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => scrollToIndex(i)}
               aria-label={`Ver foto ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all ${
-                i === active ? 'w-6 bg-ink' : 'w-1.5 bg-ink/20'
-              }`}
-            />
+              className="p-2.5 -m-1"
+            >
+              <span
+                className={`block h-1.5 rounded-full transition-all ${
+                  i === active ? 'w-6 bg-ink' : 'w-1.5 bg-ink/20'
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}
