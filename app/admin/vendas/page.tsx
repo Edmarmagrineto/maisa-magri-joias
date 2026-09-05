@@ -11,13 +11,16 @@ type PaidOrderItem = {
   orders: { status: string } | { status: string }[] | null;
 };
 
+// pedidos que ja foram pagos, mesmo que tenham avancado pra enviado/entregue depois
+const PAID_STATUSES = ['pago', 'enviado', 'entregue'];
+
 export default async function AdminVendasPage() {
   const supabase = createClient();
 
   const { data: orders } = await supabase
     .from('orders')
     .select('id, total, created_at')
-    .eq('status', 'pago');
+    .in('status', PAID_STATUSES);
 
   const paidOrders = (orders as PaidOrder[] | null) ?? [];
 
@@ -34,7 +37,7 @@ export default async function AdminVendasPage() {
   const { data: items } = await supabase
     .from('order_items')
     .select('product_name, quantity, unit_price, orders!inner(status)')
-    .eq('orders.status', 'pago');
+    .in('orders.status', PAID_STATUSES);
 
   const itemList = (items as unknown as PaidOrderItem[] | null) ?? [];
 
