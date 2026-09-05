@@ -1,10 +1,10 @@
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { formatPrice } from '@/lib/format';
 import AddToCartButton from '@/components/AddToCartButton';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import ReviewsSection from '@/components/ReviewsSection';
+import ProductGallery from '@/components/ProductGallery';
 import type { Product } from '@/lib/types';
 
 export const revalidate = 0;
@@ -20,15 +20,12 @@ export default async function ProdutoPage({ params }: { params: { id: string } }
   if (!product) notFound();
 
   const p = product as Product;
+  const gallery = [p.image_url, ...(p.images ?? [])].filter((url): url is string => Boolean(url));
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
       <div className="grid gap-12 lg:grid-cols-2">
-        <div className="relative aspect-[4/5] bg-sand">
-          {p.image_url && (
-            <Image src={p.image_url} alt={p.name} fill className="object-cover" priority />
-          )}
-        </div>
+        <ProductGallery images={gallery} alt={p.name} />
 
         <div>
           <p className="text-xs uppercase tracking-widest2 text-ink/50">{p.category}</p>

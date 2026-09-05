@@ -18,17 +18,21 @@ export default function AdminProductForm({ product }: { product?: Product }) {
   const [price, setPrice] = useState(product?.price?.toString() ?? '');
   const [stock, setStock] = useState(product?.stock?.toString() ?? '10');
   const [description, setDescription] = useState(product?.description ?? '');
-  const [imageUrl, setImageUrl] = useState(product?.image_url ?? '');
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(product?.image_url ?? null);
+  const [imageUrl] = useState(product?.image_url ?? '');
+  const [existingGallery, setExistingGallery] = useState<string[]>(product?.images ?? []);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>(
+    [product?.image_url, ...(product?.images ?? [])].filter((url): url is string => Boolean(url))
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = e.target.files?.[0];
-    if (!selected) return;
-    setFile(selected);
-    setPreview(URL.createObjectURL(selected));
+    const selected = Array.from(e.target.files ?? []);
+    if (selected.length === 0) return;
+    setFiles(selected);
+    setPreviews(selected.map((f) => URL.createObjectURL(f)));
+    setExistingGallery([]);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -37,21 +41,29 @@ export default function AdminProductForm({ product }: { product?: Product }) {
     setError('');
 
     let finalImageUrl = imageUrl;
+    let finalGallery = existingGallery;
 
-    if (file) {
-      const path = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(path, file, { upsert: true });
+    if (files.length > 0) {
+      const uploadedUrls: string[] = [];
 
-      if (uploadError) {
-        setError('Não foi possível enviar a foto. Tente novamente.');
-        setSaving(false);
-        return;
+      for (const file of files) {
+        const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name.replace(/\s+/g, '-')}`;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(path, file, { upsert: true });
+
+        if (uploadError) {
+          setError('Não foi possível enviar as fotos. Tente novamente.');
+          setSaving(false);
+          return;
+        }
+
+        const { data: publicUrl } = supabase.storage.from('product-images').getPublicUrl(path);
+        uploadedUrls.push(publicUrl.publicUrl);
       }
 
-      const { data: publicUrl } = supabase.storage.from('product-images').getPublicUrl(path);
-      finalImageUrl = publicUrl.publicUrl;
+      finalImageUrl = uploadedUrls[0];
+      finalGallery = uploadedUrls.slice(1);
     }
 
     const payload = {
@@ -61,6 +73,7 @@ export default function AdminProductForm({ product }: { product?: Product }) {
       stock: Number(stock),
       description: description || null,
       image_url: finalImageUrl || null,
+      images: finalGallery,
     };
 
     const { error: saveError } = isEditing
@@ -91,9 +104,22 @@ export default function AdminProductForm({ product }: { product?: Product }) {
     <form onSubmit={handleSubmit} className="grid gap-8 sm:grid-cols-[220px_1fr]">
       <div>
         <div className="relative aspect-[4/5] bg-sand mb-3">
-          {preview && <Image src={preview} alt="Pré-visualização" fill className="object-cover" />}
+          {previews[0] && <Image src={previews[0]} alt="Pré-visualização" fill className="object-cover" />}
         </div>
-        <input type="file" accept="image/*" onChange={handleFileChange} className="text-xs" />
+        {previews.length > 1 && (
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {previews.slice(1).map((src, i) => (
+              <div key={src + i} className="relative aspect-square bg-sand">
+                <Image src={src} alt={`Foto ${i + 2}`} fill className="object-cover" />
+              </div>
+            ))}
+          </div>
+        )}
+        <input type="file" accept="image/*" multiple onChange={handleFileChange} className="text-xs" />
+        <p className="text-[11px] text-ink/40 mt-2">
+          Selecione uma ou várias fotos da mesma peça. A primeira vira a foto de capa; as demais
+          formam a galeria que a cliente rola de lado na página do produto.
+        </p>
       </div>
 
       <div className="space-y-4">

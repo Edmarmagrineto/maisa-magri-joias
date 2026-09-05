@@ -5,6 +5,7 @@ export type Product = {
   price: number;
   category: string;
   image_url: string | null;
+  images: string[];
   stock: number;
   is_active: boolean;
   created_at: string;
