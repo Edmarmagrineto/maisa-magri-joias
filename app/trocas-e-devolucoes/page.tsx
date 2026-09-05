@@ -48,8 +48,8 @@ export default function TrocasEDevolucoesPage() {
               (17) 99745-1727
             </a>{' '}
             ou pelo e-mail{' '}
-            <a href="mailto:pedidosmaisamagri@gmail.com" className="underline hover:no-underline">
-              pedidosmaisamagri@gmail.com
+            <a href="mailto:pedidos@maisamagri.com.br" className="underline hover:no-underline">
+              pedidos@maisamagri.com.br
             </a>{' '}
             informando o número do pedido (disponível em &quot;Minha conta&quot;) e o motivo da
             troca ou devolução. Vamos te orientar sobre como enviar a peça de volta.

@@ -5,7 +5,7 @@ const TOKEN_URL = `${BASE_URL}/oauth/token`;
 const CALCULATE_URL = `${BASE_URL}/api/v2/me/shipment/calculate`;
 
 function getUserAgent() {
-  const contact = process.env.ORDER_NOTIFICATION_EMAIL || 'contato@maisamagri.com.br';
+  const contact = process.env.ORDER_NOTIFICATION_EMAIL || 'pedidos@maisamagri.com.br';
   return `Maisa Magri (${contact})`;
 }
 

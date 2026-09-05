@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const clientId = process.env.MELHORENVIO_CLIENT_ID;
   const clientSecret = process.env.MELHORENVIO_CLIENT_SECRET;
   const redirectUri = process.env.MELHORENVIO_REDIRECT_URI || `${siteUrl}/api/melhorenvio/callback`;
-  const contact = process.env.ORDER_NOTIFICATION_EMAIL || 'contato@maisamagri.com.br';
+  const contact = process.env.ORDER_NOTIFICATION_EMAIL || 'pedidos@maisamagri.com.br';
 
   try {
     const res = await fetch('https://melhorenvio.com.br/oauth/token', {
