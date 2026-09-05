@@ -17,7 +17,9 @@ export default function ProductGallery({ images, alt }: { images: string[]; alt:
   function scrollToIndex(index: number) {
     const el = containerRef.current;
     if (!el) return;
-    el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' });
+    // 'smooth' scrollTo pode nao completar em alguns navegadores com scroll-snap —
+    // 'instant' garante que o clique sempre funcione (o gesto de arrastar continua suave)
+    el.scrollTo({ left: index * el.clientWidth, behavior: 'instant' });
   }
 
   if (images.length === 0) {
