@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { href: '/produtos?categoria=Brincos', label: 'Brincos' },
   { href: '/produtos?categoria=Colares', label: 'Colares' },
   { href: '/produtos?categoria=Pulseiras', label: 'Pulseiras' },
+  { href: '/produtos?categoria=Anéis', label: 'Anéis' },
   { href: '/sobre', label: 'Como funciona' },
 ];
 
