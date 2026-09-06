@@ -11,17 +11,20 @@ export default function ProductVideoBubble({ src, alt }: { src: string; alt: str
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Ver vídeo de ${alt}`}
-        className="relative h-16 w-16 shrink-0 rounded-full overflow-hidden border-2 border-ink/70 focus:outline-none focus:ring-2 focus:ring-ink/40"
+        className="flex flex-col items-center gap-1 focus:outline-none"
       >
-        <video
-          src={src}
-          className="h-full w-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-        />
+        <span className="relative h-16 w-16 shrink-0 rounded-full overflow-hidden border-2 border-ink/70 focus-visible:ring-2 focus-visible:ring-ink/40">
+          <video
+            src={src}
+            className="h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          />
+        </span>
+        <span className="text-[10px] uppercase tracking-widest2 text-ink/60">Veja o vídeo</span>
       </button>
 
       {open && (
