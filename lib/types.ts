@@ -6,6 +6,7 @@ export type Product = {
   category: string;
   image_url: string | null;
   images: string[];
+  video_url: string | null;
   stock: number;
   is_active: boolean;
   created_at: string;

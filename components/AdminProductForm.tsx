@@ -24,6 +24,8 @@ export default function AdminProductForm({ product }: { product?: Product }) {
   const [previews, setPreviews] = useState<string[]>(
     [product?.image_url, ...(product?.images ?? [])].filter((url): url is string => Boolean(url))
   );
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(product?.video_url ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,6 +35,13 @@ export default function AdminProductForm({ product }: { product?: Product }) {
     setFiles(selected);
     setPreviews(selected.map((f) => URL.createObjectURL(f)));
     setExistingGallery([]);
+  }
+
+  function handleVideoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -66,6 +75,24 @@ export default function AdminProductForm({ product }: { product?: Product }) {
       finalGallery = uploadedUrls.slice(1);
     }
 
+    let finalVideoUrl = product?.video_url ?? null;
+
+    if (videoFile) {
+      const path = `videos/${Date.now()}-${Math.random().toString(36).slice(2)}-${videoFile.name.replace(/\s+/g, '-')}`;
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(path, videoFile, { upsert: true });
+
+      if (uploadError) {
+        setError('Não foi possível enviar o vídeo. Tente novamente.');
+        setSaving(false);
+        return;
+      }
+
+      const { data: publicUrl } = supabase.storage.from('product-images').getPublicUrl(path);
+      finalVideoUrl = publicUrl.publicUrl;
+    }
+
     const payload = {
       name,
       category,
@@ -74,6 +101,7 @@ export default function AdminProductForm({ product }: { product?: Product }) {
       description: description || null,
       image_url: finalImageUrl || null,
       images: finalGallery,
+      video_url: finalVideoUrl,
     };
 
     const { error: saveError } = isEditing
@@ -120,6 +148,17 @@ export default function AdminProductForm({ product }: { product?: Product }) {
           Selecione uma ou várias fotos da mesma peça. A primeira vira a foto de capa; as demais
           formam a galeria que a cliente rola de lado na página do produto.
         </p>
+
+        <div className="mt-5 pt-5 border-t border-ink/10">
+          {videoPreview && (
+            <video src={videoPreview} className="w-full aspect-[4/5] object-cover bg-sand mb-3" muted loop autoPlay playsInline />
+          )}
+          <input type="file" accept="video/*" onChange={handleVideoChange} className="text-xs" />
+          <p className="text-[11px] text-ink/40 mt-2">
+            Opcional: um vídeo curto da peça. Aparece como uma bolinha ao lado das fotos, que a
+            cliente pode clicar para ver em tela cheia.
+          </p>
+        </div>
       </div>
 
       <div className="space-y-4">

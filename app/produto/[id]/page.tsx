@@ -5,6 +5,7 @@ import AddToCartButton from '@/components/AddToCartButton';
 import ShippingCalculator from '@/components/ShippingCalculator';
 import ReviewsSection from '@/components/ReviewsSection';
 import ProductGallery from '@/components/ProductGallery';
+import ProductVideoBubble from '@/components/ProductVideoBubble';
 import type { Product } from '@/lib/types';
 
 export const revalidate = 0;
@@ -25,7 +26,14 @@ export default async function ProdutoPage({ params }: { params: { id: string } }
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
       <div className="grid gap-12 lg:grid-cols-2">
-        <ProductGallery images={gallery} alt={p.name} />
+        <div>
+          {p.video_url && (
+            <div className="mb-3">
+              <ProductVideoBubble src={p.video_url} alt={p.name} />
+            </div>
+          )}
+          <ProductGallery images={gallery} alt={p.name} />
+        </div>
 
         <div>
           <p className="text-xs uppercase tracking-widest2 text-ink/50">{p.category}</p>
