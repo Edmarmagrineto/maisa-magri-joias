@@ -1,10 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 export default function MobileNav({ links }: { links: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
+
+  // trava o scroll do fundo enquanto o menu está aberto — sem isso, o Safari do
+  // iPhone às vezes renderiza o conteúdo de trás junto com o menu, tudo sobreposto
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
 
   return (
     <div className="md:hidden">
