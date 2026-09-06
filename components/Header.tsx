@@ -45,7 +45,7 @@ export default async function Header() {
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center justify-center gap-8 text-xs uppercase tracking-wider text-ink/80 border-t border-ink/10 h-11">
+        <nav className="flex items-center gap-6 sm:justify-center sm:gap-8 overflow-x-auto no-scrollbar text-xs uppercase tracking-wider text-ink/80 border-t border-ink/10 h-11">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className="whitespace-nowrap hover:text-ink transition-colors">
               {link.label}
