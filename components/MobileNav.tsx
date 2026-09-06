@@ -1,10 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 
 export default function MobileNav({ links }: { links: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // trava o scroll do fundo enquanto o menu está aberto — sem isso, o Safari do
   // iPhone às vezes renderiza o conteúdo de trás junto com o menu, tudo sobreposto
@@ -16,6 +22,26 @@ export default function MobileNav({ links }: { links: { href: string; label: str
       document.body.style.overflow = original;
     };
   }, [open]);
+
+  const menu = (
+    <div className="fixed inset-0 z-50 bg-cream">
+      <div className="flex justify-end p-6">
+        <button aria-label="Fechar menu" onClick={() => setOpen(false)} className="text-2xl">
+          ×
+        </button>
+      </div>
+      <nav className="flex flex-col items-center gap-6 pt-8 text-lg font-serif">
+        {links.map((link) => (
+          <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>
+            {link.label}
+          </Link>
+        ))}
+        <Link href="/entrar" onClick={() => setOpen(false)}>
+          Entrar
+        </Link>
+      </nav>
+    </div>
+  );
 
   return (
     <div className="md:hidden">
@@ -29,25 +55,10 @@ export default function MobileNav({ links }: { links: { href: string; label: str
         <span className="block h-px w-5 bg-ink" />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 bg-cream">
-          <div className="flex justify-end p-6">
-            <button aria-label="Fechar menu" onClick={() => setOpen(false)} className="text-2xl">
-              ×
-            </button>
-          </div>
-          <nav className="flex flex-col items-center gap-6 pt-8 text-lg font-serif">
-            {links.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>
-                {link.label}
-              </Link>
-            ))}
-            <Link href="/entrar" onClick={() => setOpen(false)}>
-              Entrar
-            </Link>
-          </nav>
-        </div>
-      )}
+      {/* renderizado via portal direto no body — um ancestral (o cabecalho) usa
+          backdrop-blur, e isso faz esse elemento "fixed" ficar preso dentro da
+          caixa do cabecalho em vez de cobrir a tela toda (bug do Safari/iOS) */}
+      {open && mounted && createPortal(menu, document.body)}
     </div>
   );
 }

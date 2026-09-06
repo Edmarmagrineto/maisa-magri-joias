@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function RedefinirSenhaPage() {
   const supabase = createClient();
@@ -105,24 +106,15 @@ export default function RedefinirSenhaPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="text-xs uppercase tracking-widest2 text-ink/50">Nova senha</label>
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-ink/20 px-3 py-2 mt-1 text-sm bg-transparent outline-none focus:border-ink"
-          />
+          <PasswordInput required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <div>
           <label className="text-xs uppercase tracking-widest2 text-ink/50">Confirmar senha</label>
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={6}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full border border-ink/20 px-3 py-2 mt-1 text-sm bg-transparent outline-none focus:border-ink"
           />
         </div>
 

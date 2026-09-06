@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function EntrarPage() {
   return (
@@ -63,13 +64,7 @@ function EntrarForm() {
               Esqueceu a senha?
             </Link>
           </div>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-ink/20 px-3 py-2 mt-1 text-sm bg-transparent outline-none focus:border-ink"
-          />
+          <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
 
         {error && <p className="text-xs text-red-700">{error}</p>}

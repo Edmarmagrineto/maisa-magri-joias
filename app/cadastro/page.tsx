@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { formatCPF, formatPhone, isValidCPF, isValidPhone } from '@/lib/validators';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function CadastroPage() {
   return (
@@ -133,14 +134,7 @@ function CadastroForm() {
         </div>
         <div>
           <label className="text-xs uppercase tracking-widest2 text-ink/50">Senha</label>
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-ink/20 px-3 py-2 mt-1 text-sm bg-transparent outline-none focus:border-ink"
-          />
+          <PasswordInput required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
 
         {error && <p className="text-xs text-red-700">{error}</p>}

@@ -9,20 +9,25 @@ import type { Product } from '@/lib/types';
 
 export const revalidate = 0;
 
+const CATEGORIES = ['Brincos', 'Colares', 'Pulseiras', 'Anéis'];
+
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: { melhorenvio?: string };
+  searchParams: { melhorenvio?: string; categoria?: string };
 }) {
   const { user, profile } = await getCurrentProfile();
   if (!user) redirect('/entrar?redirect=/admin');
   if (!profile?.is_admin) redirect('/conta');
 
+  const activeCategory = searchParams.categoria && CATEGORIES.includes(searchParams.categoria)
+    ? searchParams.categoria
+    : null;
+
   const supabase = createClient();
-  const { data: products } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
+  let query = supabase.from('products').select('*').order('created_at', { ascending: false });
+  if (activeCategory) query = query.eq('category', activeCategory);
+  const { data: products } = await query;
 
   const shippingConnected = await isMelhorEnvioConnected();
 
@@ -68,6 +73,28 @@ export default async function AdminPage({
         </Link>
       </div>
 
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Link
+          href="/admin"
+          className={`px-4 py-2 text-xs uppercase tracking-widest2 border ${
+            !activeCategory ? 'bg-ink text-cream border-ink' : 'border-ink/20 hover:border-ink'
+          }`}
+        >
+          Todas
+        </Link>
+        {CATEGORIES.map((cat) => (
+          <Link
+            key={cat}
+            href={`/admin?categoria=${cat}`}
+            className={`px-4 py-2 text-xs uppercase tracking-widest2 border ${
+              activeCategory === cat ? 'bg-ink text-cream border-ink' : 'border-ink/20 hover:border-ink'
+            }`}
+          >
+            {cat}
+          </Link>
+        ))}
+      </div>
+
       <div className="divide-y divide-ink/10 border-t border-b border-ink/10">
         {(products as Product[] | null)?.map((product) => (
           <Link
@@ -90,7 +117,9 @@ export default async function AdminPage({
           </Link>
         ))}
         {(!products || products.length === 0) && (
-          <p className="py-10 text-center text-ink/50">Nenhuma peça cadastrada ainda.</p>
+          <p className="py-10 text-center text-ink/50">
+            {activeCategory ? `Nenhuma peça em ${activeCategory} ainda.` : 'Nenhuma peça cadastrada ainda.'}
+          </p>
         )}
       </div>
     </div>
